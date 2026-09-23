@@ -84,7 +84,10 @@ def scrape_meals(wait):
     print(f"Found {num_rows} items to process. Recording foods...")
 
     # PHASE 1: RECORD EVERY FOOD ITEM AND ITS INGREDIENTS
-    recorded_foods = []
+    recorded_foods = [{
+                        "name": "cantelope / watermelon / honeydew",
+                        "ingredients": "froot"
+                    }]
     
     for i in range(1, num_rows + 1):
         temp_elt = wait.until(EC.element_to_be_clickable((By.XPATH, f"//*[@id='itemPanel']/section/div[4]/table/tbody/tr[{i}]")))
@@ -118,7 +121,7 @@ def scrape_meals(wait):
     return recorded_foods
 
 
-def let_user_pick_food():
+def let_user_pick_food(recorded_foods):
 
     selected_foods = []    
     for food in recorded_foods:
@@ -143,7 +146,7 @@ def let_user_pick_food():
     return selected_foods
 
 
-def fill_out_form(driver, selected_foods):
+def fill_out_form(driver, wait, target_date, selected_foods):
 
     driver.get("https://dining.umich.edu/secure-form-to-go-meal-form/")
 
@@ -227,32 +230,38 @@ if __name__ == "__main__":
     # 3. Launch the browser
     driver = webdriver.Chrome(service=service, options=options)
 
-    print("Navigating to NetNutrition...")
-    driver.get("https://fss.studentlife.umich.edu/NetNutrition/1")
-
     try:
-        
-        # Ask the user for the date via the terminal
-        target_date = input("\nEnter the date exactly as it appears on the page (e.g., 'Monday, September 7, 2026'): ")
+        while True:
+            print("Navigating to NetNutrition...")
+            driver.get("https://fss.studentlife.umich.edu/NetNutrition/1")
 
-        wait = WebDriverWait(driver, 15) # Wait up to 15 seconds for a link containing to be clickable
+            # Ask the user for the date via the terminal
+            target_date = input("\nEnter the date exactly as it appears on the page (e.g., 'Monday, September 7, 2026'): ")
 
-        recorded_foods = scrape_meals(wait)
-        print("\nAll items recorded successfully! Now let's review them.\n")
+            wait = WebDriverWait(driver, 15) # Wait up to 15 seconds for a link containing to be clickable
 
-        # # PHASE 2: ASK THE USER ABOUT EACH RECORDED ITEM
-        selected_foods = let_user_pick_food()
+            recorded_foods = scrape_meals(wait)
+            print("\nAll items recorded successfully! Now let's review them.\n")
 
-        fill_out_form(driver, selected_foods)
-        print(target_date)
-        print("TIME dine-in @ bursley")
-        print(selected_foods)
+            # PHASE 2: ASK THE USER ABOUT EACH RECORDED ITEM
+            selected_foods = let_user_pick_food(recorded_foods)
 
-        time.sleep(5)
+            fill_out_form(driver, wait, target_date, selected_foods)
+            print(target_date)
+            print("TIME dine-in @ bursley")
+            print(selected_foods)
+
+            time.sleep(2)
+
+            # Prompt to order another meal
+            another_meal = input("\nWould you like to order another meal? (y/n): ").strip().lower()
+            if another_meal not in ['y', 'yes']:
+                print("All orders completed!")
+                break
 
     except Exception as e:
         print(f"An error occurred: {e}")
         
     finally:
         driver.quit()
-        print("Browser closed.")    
+        print("Browser closed.")
