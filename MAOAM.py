@@ -207,7 +207,7 @@ def fill_out_form(driver, wait, target_date, selected_foods):
 
     # input entree
     entree_box = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='field_gui97z5']")))
-    entree_box.send_keys(selected_foods)
+    entree_box.send_keys(", ".join(selected_foods))
 
     # input notes
     notes_box = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='field_e29dy56']")))
