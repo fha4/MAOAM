@@ -231,7 +231,20 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
+        # Ask how many meals to order
         while True:
+            try:
+                num_meals = int(input("\nHow many meals would you like to order? "))
+                if num_meals > 0:
+                    break
+                print("Please enter a positive number.")
+            except ValueError:
+                print("Please enter a valid number.")
+
+        # Collect all orders from NetNutrition
+        orders = []
+        for meal_num in range(1, num_meals + 1):
+            print(f"\n--- Meal {meal_num} of {num_meals} ---")
             print("Navigating to NetNutrition...")
             driver.get("https://fss.studentlife.umich.edu/NetNutrition/1")
 
@@ -246,18 +259,21 @@ if __name__ == "__main__":
             # PHASE 2: ASK THE USER ABOUT EACH RECORDED ITEM
             selected_foods = let_user_pick_food(recorded_foods)
 
-            fill_out_form(driver, wait, target_date, selected_foods)
-            print(target_date)
-            print("TIME dine-in @ bursley")
-            print(selected_foods)
+            orders.append({
+                "target_date": target_date,
+                "selected_foods": selected_foods,
+            })
 
+        # Submit all orders on the dining form
+        for order_num, order in enumerate(orders, start=1):
+            print(f"\n--- Submitting order {order_num} of {num_meals} ---")
+            fill_out_form(driver, wait, order["target_date"], order["selected_foods"])
+            print(order["target_date"])
+            print("TIME dine-in @ bursley")
+            print(order["selected_foods"])
             time.sleep(2)
 
-            # Prompt to order another meal
-            another_meal = input("\nWould you like to order another meal? (y/n): ").strip().lower()
-            if another_meal not in ['y', 'yes']:
-                print("All orders completed!")
-                break
+        print("\nAll orders completed!")
 
     except Exception as e:
         print(f"An error occurred: {e}")
