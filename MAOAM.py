@@ -190,12 +190,15 @@ def fill_out_form(driver, wait, target_date, selected_foods):
     # input date
     date_box = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='field_m849z56']")))
     date_box.send_keys(convert_date_format(target_date))
+    date_box.send_keys(Keys.ESCAPE) # close the calendar popup so it doesn't cover the fields below
+    driver.execute_script("arguments[0].blur();", date_box)
+    time.sleep(1)
 
     # TODO: input time of meal
 
     # input that I have restrictions
     restrictions_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='frm_radio_11243-0']/label")))
-    restrictions_button.click()
+    driver.execute_script("arguments[0].click();", restrictions_button)
 
     # input my restrictions
     restrictions_box = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='field_p07df2']")))
@@ -203,7 +206,7 @@ def fill_out_form(driver, wait, target_date, selected_foods):
 
     # input dine in vs carry out
     dine_in_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id='frm_radio_11302-0']/label")))
-    dine_in_button.click()
+    driver.execute_script("arguments[0].click();", dine_in_button)
 
     # input entree
     entree_box = wait.until(EC.visibility_of_element_located((By.XPATH, "//*[@id='field_gui97z5']")))
@@ -220,6 +223,16 @@ def fill_out_form(driver, wait, target_date, selected_foods):
 
 if __name__ == "__main__":
 
+    # Ask how many meals to order before opening any website
+    while True:
+        try:
+            num_meals = int(input("\nHow many meals would you like to order? "))
+            if num_meals > 0:
+                break
+            print("Please enter a positive number.")
+        except ValueError:
+            print("Please enter a valid number.")
+
     # 1. Point to your manual ChromeDriver installation
     service = Service(executable_path='/home/fha/bin/chromedriver')
 
@@ -231,16 +244,6 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        # Ask how many meals to order
-        while True:
-            try:
-                num_meals = int(input("\nHow many meals would you like to order? "))
-                if num_meals > 0:
-                    break
-                print("Please enter a positive number.")
-            except ValueError:
-                print("Please enter a valid number.")
-
         # Collect all orders from NetNutrition
         orders = []
         for meal_num in range(1, num_meals + 1):
